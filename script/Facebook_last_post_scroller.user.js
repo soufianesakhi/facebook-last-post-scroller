@@ -6,7 +6,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://openuserjs.org/src/libs/soufianesakhi/node-creation-observer.min.js
 // @include     https://www.facebook.com/?sk=h_chr
-// @version     1.0.0
+// @version     1.0.1
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -38,16 +38,20 @@ var stopped = false;
 
 $(document).ready(function() {
     NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
-        var storyElement = $(storyDetailsElement).closest(storySelector);
-        var storyId = storyElement.attr('id');
-        var lastPostIconId = getLastPostIconId(storyId);
-        $(storyDetailsElement).append('<span id="' + lastPostIconId + '" > <abbr title="Set as last post"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /></abbr></span>');
-        $("#" + lastPostIconId).click(function() {
-            if (confirm("Set this post as the last ?")) {
-                var storyElement = $(this).closest(storySelector);
-                setLastPost(storyElement);
-            }
-        });
+        var fbUrlPattern = new RegExp("https?:\/\/www\.facebook\.com\/\\?sk\=h_chr", "i");
+        var isMostRecentMode = fbUrlPattern.test(document.URL);
+        if (isMostRecentMode) {
+            var storyElement = $(storyDetailsElement).closest(storySelector);
+            var storyId = storyElement.attr('id');
+            var lastPostIconId = getLastPostIconId(storyId);
+            $(storyDetailsElement).append('<span id="' + lastPostIconId + '" > <abbr title="Set as last post"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /></abbr></span>');
+            $("#" + lastPostIconId).click(function() {
+                if (confirm("Set this post as the last ?")) {
+                    var storyElement = $(this).closest(storySelector);
+                    setLastPost(storyElement);
+                }
+            });
+        }
     });
     if (lastPostURI === "") {
         return;
