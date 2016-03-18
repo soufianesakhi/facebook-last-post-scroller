@@ -1,6 +1,7 @@
 ﻿// ==UserScript==
 // @name        Facebook last post scroller
 // @namespace   https://github.com/soufianesakhi/facebook-last-post-scroller
+// @description Automatically scroll to the last viewed or marked Facebook story
 // @author      Soufiane Sakhi
 // @license     MIT licensed, Copyright (c) 2016 Soufiane Sakhi (https://opensource.org/licenses/MIT)
 // @homepage    https://github.com/soufianesakhi/facebook-last-post-scroller
@@ -12,12 +13,13 @@
 // @require     https://openuserjs.org/src/libs/soufianesakhi/node-creation-observer.min.js
 // @include     https://www.facebook.com/
 // @include     https://www.facebook.com/?sk=h_chr
-// @version     1.0.3
+// @version     1.1.0
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
 
 var storySelector = "[id^='hyperfeed_story_id']";
+var scrollerBtnPredecessorSelector = "#pagelet_composer";
 var storyLinkSelector = "div._5pcp > span > span > a._5pcq";
 var lastPostButtonAppendSelector = "div._5pcp"
 var blueBarId = "pagelet_bluebar";
@@ -47,10 +49,70 @@ var isMostRecentMode = false;
 var isHome = true;
 
 $(document).ready(function() {
-    checkMostRecentMode();
-    initLastPostButtonObserver();
-    scrollToLastPost();
+    checkPage();
+    if (isHome && isMostRecentMode) {
+        initLastPostButtonObserver();
+        initScrollToLastPost();
+    }
 });
+
+function initLastPostButtonObserver() {
+    NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
+        var storyElement = $(storyDetailsElement).closest(storySelector);
+        var storyId = storyElement.attr('id');
+        var lastPostIconId = getId(storyId);
+        $(storyDetailsElement).append('<span id="' + lastPostIconId + '" > <abbr title="Set as last post"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /></abbr></span>');
+        $("#" + lastPostIconId).click(function() {
+            if (confirm("Set this post as the last ?")) {
+                var storyElement = $(this).closest(storySelector);
+                setLastPost(storyElement);
+            }
+        });
+    });
+}
+
+function initScrollToLastPost() {
+    NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function(predecessor) {
+        var lastPostScrollerId = getId("Scroller");
+        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="float: right;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
+        $("#" + lastPostScrollerId).click(function() {   
+            $(this).hide();             
+            NodeCreationObserver.onCreation(storySelector, function(element) {
+                if (stopped) {
+                    return;
+                }
+                storyCount++;
+                if (loadedStories.indexOf(element) == -1) {
+                    loadedStories.push(element);
+                }
+                if (storyCount % loadedStoryByPage == 0) {
+                    waitForStoriesToLoad(element.id, storyCount);
+                    return;
+                }
+                if (storyCount == 1) {
+                    setLastPost(element);
+                    if (lastPostURI == null) {
+                        NodeCreationObserver.remove(storySelector);
+                        stopped = true;
+                        return;
+                    }
+                    searchForStory();
+                } else if (storyCount == 2) {
+                    searchForStory();
+                    scrollToBottom();
+                    storyCount = 10;
+                }
+            });
+        });
+    });
+}
+
+function checkPage() {
+    isHome = matchesFBHomeURL();
+    if (isHome) {
+        checkMostRecentMode();
+    }
+}
 
 function checkMostRecentMode() {
     $("script").each(function() {
@@ -69,31 +131,6 @@ function checkMostRecentMode() {
     });
 }
 
-function initLastPostButtonObserver() {
-    NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
-        checkURL();
-        if (isHome && isMostRecentMode) {
-            var storyElement = $(storyDetailsElement).closest(storySelector);
-            var storyId = storyElement.attr('id');
-            var lastPostIconId = getLastPostIconId(storyId);
-            $(storyDetailsElement).append('<span id="' + lastPostIconId + '" > <abbr title="Set as last post"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /></abbr></span>');
-            $("#" + lastPostIconId).click(function() {
-                if (confirm("Set this post as the last ?")) {
-                    var storyElement = $(this).closest(storySelector);
-                    setLastPost(storyElement);
-                }
-            });
-        }
-    });
-}
-
-function checkURL() {
-    isHome = matchesFBHomeURL();
-    if (isHome) {
-        checkMostRecentMode();
-    }
-}
-
 function matchesFBHomeURL() {
     var isHome = false;
     fbUrlPatterns.forEach(function(pattern) {
@@ -104,35 +141,6 @@ function matchesFBHomeURL() {
     return isHome;
 }
 
-function scrollToLastPost() {
-    NodeCreationObserver.onCreation(storySelector, function(element) {
-        if (stopped) {
-            return;
-        }
-        storyCount++;
-        if (loadedStories.indexOf(element) == -1) {
-            loadedStories.push(element);
-        }
-        if (storyCount % loadedStoryByPage == 0) {
-            waitForStoriesToLoad(element.id, storyCount);
-            return;
-        }
-        if (storyCount == 1) {
-            setLastPost(element);
-            if (lastPostURI == null) {
-                NodeCreationObserver.remove(storySelector);
-                stopped = true;
-                return;
-            }
-            searchForStory();
-        } else if (storyCount == 2) {
-            searchForStory();
-            scrollToBottom();
-            storyCount = 10;
-        }
-    });
-}
-
 function setLastPost(storyElement) {
     var uri = getStoryURI(storyElement);
     var timestamp = getStoryTimestamp(storyElement);
@@ -141,8 +149,8 @@ function setLastPost(storyElement) {
     console.log("Setting last post: " + uri + "(" + timestamp + ")");
 }
 
-function getLastPostIconId(storyId) {
-    return scriptId + "-" + storyId;
+function getId(elementId) {
+    return scriptId + "-" + elementId;
 }
 
 function waitForStoriesToLoad(id, count) {

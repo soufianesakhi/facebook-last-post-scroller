@@ -2,11 +2,11 @@
 
 ## Usage
 
-When this script is enabled, the page will scroll to the last visited or marked story after opening the facebook page.
+When this script is enabled, the page will automatically scroll to the last viewed or marked story after clicking the "Scroll to last post" button.
 
-By default, the last story will be set as the first story during each page refresh.
+By default, the last viewed story will be saved during each page refresh.
 
-Another story can be marked as the last story by clicking in the down arrow near the timestamp area of the story.
+Another story can be marked as the last viewed story by clicking in the down arrow near the timestamp area of the story.
 
 ## Installation
 
