@@ -13,7 +13,7 @@
 // @require     https://openuserjs.org/src/libs/soufianesakhi/node-creation-observer.min.js
 // @include     https://www.facebook.com/
 // @include     https://www.facebook.com/?sk=h_chr
-// @version     1.1.0
+// @version     1.1.1
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -46,18 +46,18 @@ var checkedStories = [];
 var previousScrollHeight;
 var stopped = false;
 var isMostRecentMode = false;
-var isHome = true;
+var isHome = false;
 
 $(document).ready(function() {
-    checkPage();
-    if (isHome && isMostRecentMode) {
-        initLastPostButtonObserver();
-        initScrollToLastPost();
-    }
+    initLastPostButtonObserver();
+    initScrollToLastPost();
 });
 
 function initLastPostButtonObserver() {
     NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
+        if (!isHomeMostRecent()) {
+            return;
+        }
         var storyElement = $(storyDetailsElement).closest(storySelector);
         var storyId = storyElement.attr('id');
         var lastPostIconId = getId(storyId);
@@ -73,10 +73,13 @@ function initLastPostButtonObserver() {
 
 function initScrollToLastPost() {
     NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function(predecessor) {
+        if (!isHomeMostRecent()) {
+            return;
+        }
         var lastPostScrollerId = getId("Scroller");
         $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="float: right;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
-        $("#" + lastPostScrollerId).click(function() {   
-            $(this).hide();             
+        $("#" + lastPostScrollerId).click(function() {
+            $(this).hide();
             NodeCreationObserver.onCreation(storySelector, function(element) {
                 if (stopped) {
                     return;
@@ -107,11 +110,12 @@ function initScrollToLastPost() {
     });
 }
 
-function checkPage() {
+function isHomeMostRecent() {
     isHome = matchesFBHomeURL();
     if (isHome) {
         checkMostRecentMode();
     }
+    return isHome && isMostRecentMode;
 }
 
 function checkMostRecentMode() {
