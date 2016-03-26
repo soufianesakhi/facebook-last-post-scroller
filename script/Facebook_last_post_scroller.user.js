@@ -11,9 +11,8 @@
 // @icon        https://cdn3.iconfinder.com/data/icons/watchify-v1-0-80px/80/arrow-down-80px-128.png
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://openuserjs.org/src/libs/soufianesakhi/node-creation-observer.min.js
-// @include     https://www.facebook.com/
-// @include     https://www.facebook.com/?sk=h_chr
-// @version     1.1.1
+// @include     https://www.facebook.com/*
+// @version     1.1.2
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -25,8 +24,7 @@ var lastPostButtonAppendSelector = "div._5pcp"
 var blueBarId = "pagelet_bluebar";
 var timestampAttribute = "data-timestamp";
 var loadedStoryByPage = 10;
-var fbUrlPatterns = [new RegExp("https?:\/\/www\.facebook\.com\/\\?sk\=h_chr", "i"),
-    new RegExp("https?:\/\/www\.facebook\.com\/?$", "i")];
+var fbUrlPatterns = [new RegExp("https?:\/\/www\.facebook\.com\/\\?sk\=h_chr", "i"), new RegExp("https?:\/\/www\.facebook\.com\/?$", "i"), new RegExp("https?:\/\/www\.facebook\.com\/\\?ref\=logo", "i")];
 
 var lastPostIconLink = "https://cdn3.iconfinder.com/data/icons/watchify-v1-0-80px/80/arrow-down-80px-128.png";
 var iconStyle = "vertical-align: middle; height: 20px; width: 20px; cursor: pointer;";
@@ -47,6 +45,7 @@ var previousScrollHeight;
 var stopped = false;
 var isMostRecentMode = false;
 var isHome = false;
+var currentURL = null;
 
 $(document).ready(function() {
     initLastPostButtonObserver();
@@ -55,6 +54,7 @@ $(document).ready(function() {
 
 function initLastPostButtonObserver() {
     NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
+        checkURLChange();
         if (!isHomeMostRecent()) {
             return;
         }
@@ -73,11 +73,12 @@ function initLastPostButtonObserver() {
 
 function initScrollToLastPost() {
     NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function(predecessor) {
+        checkURLChange();
         if (!isHomeMostRecent()) {
             return;
         }
         var lastPostScrollerId = getId("Scroller");
-        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="float: right;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
+        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="float: right; cursor: pointer;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
         $("#" + lastPostScrollerId).click(function() {
             $(this).hide();
             NodeCreationObserver.onCreation(storySelector, function(element) {
@@ -110,35 +111,31 @@ function initScrollToLastPost() {
     });
 }
 
-function isHomeMostRecent() {
-    isHome = matchesFBHomeURL();
-    if (isHome) {
-        checkMostRecentMode();
+function checkURLChange() {
+    var url = document.URL;
+    if (url !== currentURL) {
+        currentURL = url;
+        isHome = matchesFBHomeURL();
+        if (isHome) {
+            checkMostRecentMode();
+        }
     }
+}
+
+function isHomeMostRecent() {
     return isHome && isMostRecentMode;
 }
 
 function checkMostRecentMode() {
-    $("script").each(function() {
-        var text = $(this).text().trim();
-        if (text.startsWith('bigPipe.beforePageletArrive("pagelet_navigation")')) {
-            var textContainingMode = $(this).next().text();
-            var selectedModePattern = /\"selectedKey"\:\"([^\"]*)"/i;
-            var match = textContainingMode.match(selectedModePattern);
-            var modeText = match[1];
-            if (modeText === "h_chr") {
-                isMostRecentMode = true;
-            } else {
-                isMostRecentMode = false;
-            }
-        }
-    });
+    var element = $("#stream_pagelet a[href^='/?sk=h_nor']");
+    var elementExist = element.length == 1;
+    isMostRecentMode = elementExist && element.is(':visible');
 }
 
 function matchesFBHomeURL() {
     var isHome = false;
     fbUrlPatterns.forEach(function(pattern) {
-        if (pattern.test(document.URL)) {
+        if (pattern.test(currentURL)) {
             isHome = true;
         }
     });
@@ -150,7 +147,7 @@ function setLastPost(storyElement) {
     var timestamp = getStoryTimestamp(storyElement);
     GM_setValue(lastPostURIKey, uri);
     GM_setValue(lastPostTimestampKey, timestamp);
-    console.log("Setting last post: " + uri + "(" + timestamp + ")");
+    console.log("Setting last post: " + uri + " (timestamp: " + timestamp + ")");
 }
 
 function getId(elementId) {
@@ -191,7 +188,7 @@ function searchForStory() {
                 } else if (ts < lastPostTimestamp) {
                     stopSearching(element.id);
                     console.log("The last post was not found: " + lastPostURI);
-                    console.log("Stopped at the post: " + uri);
+                    console.log("Stopped at the timestamp: " + ts);
                 }
             }
         }

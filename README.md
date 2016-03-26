@@ -4,9 +4,11 @@
 
 When this script is enabled, the page will automatically scroll to the last viewed or marked story after clicking the "Scroll to last post" button.
 
-By default, the last viewed story will be saved during each page refresh.
+The script only works when the homepage is set to view most recent stories instead of top stories.
 
-Another story can be marked as the last viewed story by clicking in the down arrow near the timestamp area of the story.
+By default, the last viewed story will be saved during each page refresh. 
+
+The first story is considered the last story unless you mark another story by clicking in the down arrow button near the timestamp area of the story.
 
 ## Installation
 
