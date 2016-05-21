@@ -10,7 +10,7 @@
 // @downloadURL https://github.com/soufianesakhi/facebook-last-post-scroller/raw/master/script/Facebook_last_post_scroller.user.js
 // @icon        https://cdn3.iconfinder.com/data/icons/watchify-v1-0-80px/80/arrow-down-80px-128.png
 // @require     http://code.jquery.com/jquery.min.js
-// @require     https://openuserjs.org/src/libs/soufianesakhi/node-creation-observer.min.js
+// @require     https://raw.githubusercontent.com/soufianesakhi/node-creation-observer-js/master/release/node-creation-observer-latest.js
 // @include     https://www.facebook.com/*
 // @version     1.1.2
 // @grant       GM_setValue
