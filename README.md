@@ -14,7 +14,9 @@ The first story is considered the last story unless you mark another story by cl
 
 This script relies on the user scripts extensions like Greasemonkey or Tampermonkey.
 
-After installing the appropriate user scripts extension, the script will be installed after opening it in the navigator (the extension will ask you to confirm).
+After installing the appropriate user scripts extension, you can install the script from the following sites:
+- https://greasyfork.org/en/scripts/18033-facebook-last-post-scroller
+- https://openuserjs.org/scripts/soufianesakhi/Facebook_last_post_scroller
 
 ### Firefox
 

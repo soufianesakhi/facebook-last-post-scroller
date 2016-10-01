@@ -12,12 +12,13 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://raw.githubusercontent.com/soufianesakhi/node-creation-observer-js/master/release/node-creation-observer-latest.js
 // @include     https://www.facebook.com/*
-// @version     1.1.2
+// @version     1.1.3
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
 
 var storySelector = "[id^='hyperfeed_story_id']";
+var subStorySelector = ".userContentWrapper";
 var scrollerBtnPredecessorSelector = "#pagelet_composer";
 var storyLinkSelector = "div._5pcp > span > span > a._5pcq";
 var lastPostButtonAppendSelector = "div._5pcp"
@@ -185,7 +186,7 @@ function searchForStory() {
                 var ts = getStoryTimestamp(element);
                 if (uri === lastPostURI) {
                     stopSearching(element.id);
-                } else if (ts < lastPostTimestamp) {
+                } else if (isMainStory(element) && ts < lastPostTimestamp) {
                     stopSearching(element.id);
                     console.log("The last post was not found: " + lastPostURI);
                     console.log("Stopped at the timestamp: " + ts);
@@ -222,6 +223,10 @@ function prepareStory(id) {
     var offsetHeight = document.getElementById(blueBarId).offsetHeight;
     var height = $("#" + lastPostSeparatorId).offset().top;
     window.scrollTo(0, height - offsetHeight);
+}
+
+function isMainStory(storyElement) {
+    return $(storyElement).find(subStorySelector).length == 1;
 }
 
 function removeFromArray(array, element) {
