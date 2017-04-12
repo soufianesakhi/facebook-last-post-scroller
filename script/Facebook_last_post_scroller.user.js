@@ -12,7 +12,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://raw.githubusercontent.com/soufianesakhi/node-creation-observer-js/master/release/node-creation-observer-latest.js
 // @include     https://www.facebook.com/*
-// @version     1.1.3
+// @version     1.1.4
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -79,7 +79,7 @@ function initScrollToLastPost() {
             return;
         }
         var lastPostScrollerId = getId("Scroller");
-        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="float: right; cursor: pointer;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
+        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="margin-left:40%; cursor: pointer;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
         $("#" + lastPostScrollerId).click(function() {
             $(this).hide();
             NodeCreationObserver.onCreation(storySelector, function(element) {
