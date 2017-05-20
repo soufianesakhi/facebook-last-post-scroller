@@ -12,7 +12,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
-// @version     1.1.4
+// @version     1.1.5
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -23,7 +23,7 @@ var storySelector = "[id^='hyperfeed_story_id']";
 var subStorySelector = ".userContentWrapper";
 var scrollerBtnPredecessorSelector = "#pagelet_composer";
 var storyLinkSelector = "div._5pcp > span > span > a._5pcq";
-var lastPostButtonAppendSelector = "div._5pcp"
+var lastPostButtonAppendSelector = "div._5pcp";
 var blueBarId = "pagelet_bluebar";
 var timestampAttribute = "data-timestamp";
 var loadedStoryByPage = 10;
@@ -35,15 +35,20 @@ var iconStyle = "vertical-align: middle; height: 20px; width: 20px; cursor: poin
 var lastPostSeparatorTitle = "End of new posts";
 var scriptId = "FBLastPost";
 var lastPostSeparatorId = scriptId + "Separator";
-var lastPostURIKey = scriptId + "URI"
-var lastPostTimestampKey = scriptId + "Timestamp"
+var lastPostURIKey = scriptId + "URI";
+var lastPostTimestampKey = scriptId + "Timestamp";
 
 var lastPostURI = GM_getValue(lastPostURIKey, null);
 var lastPostTimestamp = GM_getValue(lastPostTimestampKey, 0);
 var storyCount = 0;
+
+/** @type {MutationObserver[]} */
 var storyLoadObservers = [];
+/** @type {Element[]} */
 var loadedStories = [];
+/** @type {Element[]} */
 var checkedStories = [];
+/** @type {Number} */
 var previousScrollHeight;
 var stopped = false;
 var isMostRecentMode = false;
@@ -97,7 +102,6 @@ function initScrollToLastPost() {
                     return;
                 }
                 if (storyCount == 1) {
-                    setLastPost(element);
                     if (lastPostURI == null) {
                         NodeCreationObserver.remove(storySelector);
                         stopped = true;
@@ -188,7 +192,8 @@ function searchForStory() {
                 var ts = getStoryTimestamp(element);
                 if (uri === lastPostURI) {
                     stopSearching(element.id);
-                } else if (isMainStory(element) && ts < lastPostTimestamp) {
+                    setLastPost(loadedStories[0]);
+                } else if (ts < lastPostTimestamp) {
                     stopSearching(element.id);
                     console.log("The last post was not found: " + lastPostURI);
                     console.log("Stopped at the timestamp: " + ts);
@@ -199,7 +204,7 @@ function searchForStory() {
 }
 
 function getStoryTimestamp(storyElement) {
-    return Number($(storyElement).attr(timestampAttribute))
+    return Number($(storyElement).attr(timestampAttribute));
 }
 
 function getStoryURI(storyElement) {
@@ -225,10 +230,6 @@ function prepareStory(id) {
     var offsetHeight = document.getElementById(blueBarId).offsetHeight;
     var height = $("#" + lastPostSeparatorId).offset().top;
     window.scrollTo(0, height - offsetHeight);
-}
-
-function isMainStory(storyElement) {
-    return $(storyElement).find(subStorySelector).length == 1;
 }
 
 function removeFromArray(array, element) {
