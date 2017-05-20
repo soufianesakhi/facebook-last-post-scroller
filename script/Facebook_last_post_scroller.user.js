@@ -3,19 +3,21 @@
 // @namespace   https://github.com/soufianesakhi/facebook-last-post-scroller
 // @description Automatically scroll to the last viewed or marked Facebook story
 // @author      Soufiane Sakhi
-// @license     MIT licensed, Copyright (c) 2016 Soufiane Sakhi (https://opensource.org/licenses/MIT)
+// @license     MIT licensed, Copyright (c) 2016-2017 Soufiane Sakhi (https://opensource.org/licenses/MIT)
 // @homepage    https://github.com/soufianesakhi/facebook-last-post-scroller
 // @supportURL  https://github.com/soufianesakhi/facebook-last-post-scroller/issues
 // @updateURL   https://github.com/soufianesakhi/facebook-last-post-scroller/raw/master/script/Facebook_last_post_scroller.user.js
 // @downloadURL https://github.com/soufianesakhi/facebook-last-post-scroller/raw/master/script/Facebook_last_post_scroller.user.js
 // @icon        https://cdn3.iconfinder.com/data/icons/watchify-v1-0-80px/80/arrow-down-80px-128.png
 // @require     http://code.jquery.com/jquery.min.js
-// @require     https://raw.githubusercontent.com/soufianesakhi/node-creation-observer-js/master/release/node-creation-observer-latest.js
+// @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
 // @version     1.1.4
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
+
+/// <reference path="../typings/index.d.ts" />
 
 var storySelector = "[id^='hyperfeed_story_id']";
 var subStorySelector = ".userContentWrapper";
@@ -48,13 +50,13 @@ var isMostRecentMode = false;
 var isHome = false;
 var currentURL = null;
 
-$(document).ready(function() {
+$(document).ready(function () {
     initLastPostButtonObserver();
     initScrollToLastPost();
 });
 
 function initLastPostButtonObserver() {
-    NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function(storyDetailsElement) {
+    NodeCreationObserver.onCreation(lastPostButtonAppendSelector, function (storyDetailsElement) {
         checkURLChange();
         if (!isHomeMostRecent()) {
             return;
@@ -63,7 +65,7 @@ function initLastPostButtonObserver() {
         var storyId = storyElement.attr('id');
         var lastPostIconId = getId(storyId);
         $(storyDetailsElement).append('<span id="' + lastPostIconId + '" > <abbr title="Set as last post"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /></abbr></span>');
-        $("#" + lastPostIconId).click(function() {
+        $("#" + lastPostIconId).click(function () {
             if (confirm("Set this post as the last ?")) {
                 var storyElement = $(this).closest(storySelector);
                 setLastPost(storyElement);
@@ -73,16 +75,16 @@ function initLastPostButtonObserver() {
 }
 
 function initScrollToLastPost() {
-    NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function(predecessor) {
+    NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function (predecessor) {
         checkURLChange();
         if (!isHomeMostRecent()) {
             return;
         }
         var lastPostScrollerId = getId("Scroller");
         $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="margin-left:40%; cursor: pointer;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
-        $("#" + lastPostScrollerId).click(function() {
+        $("#" + lastPostScrollerId).click(function () {
             $(this).hide();
-            NodeCreationObserver.onCreation(storySelector, function(element) {
+            NodeCreationObserver.onCreation(storySelector, function (element) {
                 if (stopped) {
                     return;
                 }
@@ -135,7 +137,7 @@ function checkMostRecentMode() {
 
 function matchesFBHomeURL() {
     var isHome = false;
-    fbUrlPatterns.forEach(function(pattern) {
+    fbUrlPatterns.forEach(function (pattern) {
         if (pattern.test(currentURL)) {
             isHome = true;
         }
@@ -156,7 +158,7 @@ function getId(elementId) {
 }
 
 function waitForStoriesToLoad(id, count) {
-    var mutationObserver = new MutationObserver(function(elements, observer) {
+    var mutationObserver = new MutationObserver(function (elements, observer) {
         var loadedStories = storyCount - count;
         if (stopped) {
             observer.disconnect();
@@ -178,7 +180,7 @@ function waitForStoriesToLoad(id, count) {
 }
 
 function searchForStory() {
-    loadedStories.forEach(function(element) {
+    loadedStories.forEach(function (element) {
         if (!stopped && checkedStories.indexOf(element) == -1) {
             var uri = getStoryURI(element);
             if (uri != null) {
@@ -211,7 +213,7 @@ function getStoryURI(storyElement) {
 function stopSearching(id) {
     stopped = true;
     NodeCreationObserver.remove(storySelector);
-    storyLoadObservers.forEach(function(observer) {
+    storyLoadObservers.forEach(function (observer) {
         observer.disconnect();
     });
     storyLoadObservers = [];
