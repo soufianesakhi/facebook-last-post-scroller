@@ -12,7 +12,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
-// @version     1.1.5
+// @version     1.2.0
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -34,6 +34,7 @@ var iconStyle = "vertical-align: middle; height: 20px; width: 20px; cursor: poin
 
 var lastPostSeparatorTitle = "End of new posts";
 var scriptId = "FBLastPost";
+var menuId = "FBLastPostMenu";
 var lastPostSeparatorId = scriptId + "Separator";
 var lastPostURIKey = scriptId + "URI";
 var lastPostTimestampKey = scriptId + "Timestamp";
@@ -57,7 +58,7 @@ var currentURL = null;
 
 $(document).ready(function () {
     initLastPostButtonObserver();
-    initScrollToLastPost();
+    initButtons();
 });
 
 function initLastPostButtonObserver() {
@@ -79,42 +80,64 @@ function initLastPostButtonObserver() {
     });
 }
 
-function initScrollToLastPost() {
+function getButton(id, title) {
+    return '<button id="' + id
+        + '" type="submit" style="margin-left: 2%; cursor: pointer;"><img src="'
+        + lastPostIconLink + '" style="' + iconStyle + '" />' + title
+        + '</button>';
+}
+
+function getMenu(children) {
+    return '<div id="' + menuId + '" style="text-align: center;" >' + children + '</div>';
+}
+
+function initButtons() {
     NodeCreationObserver.onCreation(scrollerBtnPredecessorSelector, function (predecessor) {
         checkURLChange();
         if (!isHomeMostRecent()) {
             return;
         }
         var lastPostScrollerId = getId("Scroller");
-        $(predecessor).after('<button id="' + lastPostScrollerId + '" type="submit" style="margin-left:40%; cursor: pointer;"><img src="' + lastPostIconLink + '" style="' + iconStyle + '" /> Scroll to last post</button>');
-        $("#" + lastPostScrollerId).click(function () {
-            $(this).hide();
-            NodeCreationObserver.onCreation(storySelector, function (element) {
-                if (stopped) {
-                    return;
-                }
-                storyCount++;
-                if (loadedStories.indexOf(element) == -1) {
-                    loadedStories.push(element);
-                }
-                if (storyCount % loadedStoryByPage == 0) {
-                    waitForStoriesToLoad(element.id, storyCount);
-                    return;
-                }
-                if (storyCount == 1) {
-                    if (lastPostURI == null) {
-                        NodeCreationObserver.remove(storySelector);
-                        stopped = true;
-                        return;
-                    }
-                    searchForStory();
-                } else if (storyCount == 2) {
-                    searchForStory();
-                    scrollToBottom();
-                    storyCount = 10;
-                }
-            });
+        var children = getButton(lastPostScrollerId, "Scroll to last post");
+        var reverseSortLoaderId = getId("ReverseSortLoader");
+        children += getButton(reverseSortLoaderId, "Load last post and revese sort stories");
+        $(predecessor).after(getMenu(children));
+        $("#" + lastPostScrollerId).click(startLoading);
+        $("#" + reverseSortLoaderId).click(() => {
+            startLoading(true);
         });
+    });
+}
+
+/**
+ * @param {boolean} reverseSort 
+ */
+function startLoading(reverseSort) {
+    $("#" + menuId).hide();
+    NodeCreationObserver.onCreation(storySelector, function (element) {
+        if (stopped) {
+            return;
+        }
+        storyCount++;
+        if (loadedStories.indexOf(element) == -1) {
+            loadedStories.push(element);
+        }
+        if (storyCount % loadedStoryByPage == 0) {
+            waitForStoriesToLoad(element.id, storyCount, reverseSort);
+            return;
+        }
+        if (storyCount == 1) {
+            if (lastPostURI == null) {
+                NodeCreationObserver.remove(storySelector);
+                stopped = true;
+                return;
+            }
+            searchForStory(reverseSort);
+        } else if (storyCount == 2) {
+            searchForStory(reverseSort);
+            scrollToBottom();
+            storyCount = 10;
+        }
     });
 }
 
@@ -161,7 +184,12 @@ function getId(elementId) {
     return scriptId + "-" + elementId;
 }
 
-function waitForStoriesToLoad(id, count) {
+/**
+ * @param {string} id 
+ * @param {number} count 
+ * @param {boolean} reverseSort 
+ */
+function waitForStoriesToLoad(id, count, reverseSort) {
     var mutationObserver = new MutationObserver(function (elements, observer) {
         var loadedStories = storyCount - count;
         if (stopped) {
@@ -171,7 +199,7 @@ function waitForStoriesToLoad(id, count) {
         if (loadedStories > loadedStoryByPage - 1) {
             observer.disconnect();
             storyLoadObservers = removeFromArray(storyLoadObservers, observer);
-            searchForStory();
+            searchForStory(reverseSort);
         } else {
             scrollToBottom();
         }
@@ -183,7 +211,10 @@ function waitForStoriesToLoad(id, count) {
     });
 }
 
-function searchForStory() {
+/**
+ * @param {boolean} reverseSort 
+ */
+function searchForStory(reverseSort) {
     loadedStories.forEach(function (element) {
         if (!stopped && checkedStories.indexOf(element) == -1) {
             var uri = getStoryURI(element);
@@ -191,10 +222,9 @@ function searchForStory() {
                 checkedStories.push(element);
                 var ts = getStoryTimestamp(element);
                 if (uri === lastPostURI) {
-                    stopSearching(element.id);
-                    setLastPost(loadedStories[0]);
+                    stopSearching(element.id, reverseSort);
                 } else if (ts < lastPostTimestamp) {
-                    stopSearching(element.id);
+                    stopSearching(element.id, reverseSort);
                     console.log("The last post was not found: " + lastPostURI);
                     console.log("Stopped at the timestamp: " + ts);
                 }
@@ -215,21 +245,33 @@ function getStoryURI(storyElement) {
     return null;
 }
 
-function stopSearching(id) {
+/**
+ * @param {string} id 
+ * @param {boolean} reverseSort 
+ */
+function stopSearching(id, reverseSort) {
+    setLastPost(checkedStories[0]);
     stopped = true;
     NodeCreationObserver.remove(storySelector);
     storyLoadObservers.forEach(function (observer) {
         observer.disconnect();
     });
     storyLoadObservers = [];
-    prepareStory(id);
-}
-
-function prepareStory(id) {
-    $("#" + id).before("<div id='" + lastPostSeparatorId + "' style='margin-bottom: 10px; text-align: center;'>" + lastPostSeparatorTitle + "</div>")
-    var offsetHeight = document.getElementById(blueBarId).offsetHeight;
-    var height = $("#" + lastPostSeparatorId).offset().top;
-    window.scrollTo(0, height - offsetHeight);
+    $("#" + id).before("<div id='" + lastPostSeparatorId + "' style='margin-bottom: 10px; text-align: center;'>" + lastPostSeparatorTitle + "</div>");
+    if (reverseSort) {
+        window.scrollTo(0, 0);
+        var timestamps = [];
+        var parent = $(checkedStories[0]).parent();
+        for (var i = 1; i < checkedStories.length - 1; i++) {
+            timestamps.push(getStoryTimestamp(checkedStories[i]));
+            $(checkedStories[i]).detach().prependTo(parent);
+        }
+    } else {
+        var offsetHeight = document.getElementById(blueBarId).offsetHeight;
+        var height = $("#" + lastPostSeparatorId).offset().top;
+        var y = height - offsetHeight;
+        window.scrollTo(0, y > 0 ? y : 0);
+    }
 }
 
 function removeFromArray(array, element) {
