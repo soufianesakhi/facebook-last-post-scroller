@@ -2,7 +2,7 @@
 // @name        Facebook last post scroller
 // @namespace   https://github.com/soufianesakhi/facebook-last-post-scroller
 // @description Automatically scroll to the last viewed or marked Facebook story
-// @author      Soufiane Sakhi
+// @author      soufianesakhi
 // @license     MIT licensed, Copyright (c) 2016-2017 Soufiane Sakhi (https://opensource.org/licenses/MIT)
 // @homepage    https://github.com/soufianesakhi/facebook-last-post-scroller
 // @supportURL  https://github.com/soufianesakhi/facebook-last-post-scroller/issues
@@ -12,7 +12,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
-// @version     1.2.0
+// @version     1.2.1
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -38,6 +38,8 @@ var menuId = "FBLastPostMenu";
 var lastPostSeparatorId = scriptId + "Separator";
 var lastPostURIKey = scriptId + "URI";
 var lastPostTimestampKey = scriptId + "Timestamp";
+var lastPostScrollerId = getId("Scroller");
+var reverseSortLoaderId = getId("ReverseSortLoader");
 
 var lastPostURI = GM_getValue(lastPostURIKey, null);
 var lastPostTimestamp = GM_getValue(lastPostTimestampKey, 0);
@@ -97,22 +99,19 @@ function initButtons() {
         if (!isHomeMostRecent()) {
             return;
         }
-        var lastPostScrollerId = getId("Scroller");
         var children = getButton(lastPostScrollerId, "Scroll to last post");
-        var reverseSortLoaderId = getId("ReverseSortLoader");
         children += getButton(reverseSortLoaderId, "Load last post and revese sort stories");
         $(predecessor).after(getMenu(children));
         $("#" + lastPostScrollerId).click(startLoading);
-        $("#" + reverseSortLoaderId).click(() => {
-            startLoading(true);
-        });
+        $("#" + reverseSortLoaderId).click(startLoading);
     });
 }
 
 /**
- * @param {boolean} reverseSort 
+ * @param {JQueryEventObject} eventObject 
  */
-function startLoading(reverseSort) {
+function startLoading(eventObject) {
+    var reverseSort = eventObject.target.id === reverseSortLoaderId;
     $("#" + menuId).hide();
     NodeCreationObserver.onCreation(storySelector, function (element) {
         if (stopped) {
@@ -223,7 +222,7 @@ function searchForStory(reverseSort) {
                 var ts = getStoryTimestamp(element);
                 if (uri === lastPostURI) {
                     stopSearching(element.id, reverseSort);
-                } else if (ts < lastPostTimestamp) {
+                } else if (ts < lastPostTimestamp && notSuggestedStory(element)) {
                     stopSearching(element.id, reverseSort);
                     console.log("The last post was not found: " + lastPostURI);
                     console.log("Stopped at the timestamp: " + ts);
@@ -231,6 +230,11 @@ function searchForStory(reverseSort) {
             }
         }
     });
+}
+
+function notSuggestedStory(storyElement) {
+    var div = $(storyElement).find("._5g-l");
+    return div.length == 0 || div.find(".profileLink").length > 0;
 }
 
 function getStoryTimestamp(storyElement) {
