@@ -12,7 +12,7 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
-// @version     1.2.1
+// @version     1.2.2
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -233,6 +233,9 @@ function searchForStory(reverseSort) {
 }
 
 function notSuggestedStory(storyElement) {
+    if ($(storyElement).find("img[alt=explore]").length > 0) {
+        return false;
+    }
     var div = $(storyElement).find("._5g-l");
     return div.length == 0 || div.find(".profileLink").length > 0;
 }
