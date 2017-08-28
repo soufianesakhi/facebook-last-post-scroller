@@ -12,7 +12,8 @@
 // @require     http://code.jquery.com/jquery.min.js
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
-// @version     1.2.2
+// @include     https://web.facebook.com/*
+// @version     1.2.3
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -27,7 +28,10 @@ var lastPostButtonAppendSelector = "div._5pcp";
 var blueBarId = "pagelet_bluebar";
 var timestampAttribute = "data-timestamp";
 var loadedStoryByPage = 10;
-var fbUrlPatterns = [new RegExp("https?:\/\/www\.facebook\.com\/\\?sk\=h_chr", "i"), new RegExp("https?:\/\/www\.facebook\.com\/?$", "i"), new RegExp("https?:\/\/www\.facebook\.com\/\\?ref\=logo", "i")];
+var fbUrlPatterns = [
+    new RegExp("https?:\/\/(web|www)\.facebook\.com\/\\?sk\=h_chr", "i"),
+    new RegExp("https?:\/\/(web|www)\.facebook\.com\/?$", "i"),
+    new RegExp("https?:\/\/(web|www)\.facebook\.com\/\\?ref\=logo", "i")];
 
 var lastPostIconLink = "https://cdn3.iconfinder.com/data/icons/watchify-v1-0-80px/80/arrow-down-80px-128.png";
 var iconStyle = "vertical-align: middle; height: 20px; width: 20px; cursor: pointer;";
