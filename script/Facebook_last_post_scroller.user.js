@@ -13,7 +13,7 @@
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
 // @include     https://web.facebook.com/*
-// @version     1.2.3
+// @version     1.2.4
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -23,7 +23,7 @@
 var storySelector = "[id^='hyperfeed_story_id']";
 var subStorySelector = ".userContentWrapper";
 var scrollerBtnPredecessorSelector = "#pagelet_composer";
-var storyLinkSelector = "div._5pcp > span > span > a._5pcq";
+var storyLinkSelector = "div._5pcp span > span > a._5pcq[target]";
 var lastPostButtonAppendSelector = "div._5pcp";
 var blueBarId = "pagelet_bluebar";
 var timestampAttribute = "data-timestamp";
