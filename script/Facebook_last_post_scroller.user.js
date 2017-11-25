@@ -268,7 +268,11 @@ function stopSearching(id, reverseSort) {
         observer.disconnect();
     });
     storyLoadObservers = [];
-    $("#" + id).before("<div id='" + lastPostSeparatorId + "' style='margin-bottom: 10px; text-align: center;'>" + lastPostSeparatorTitle + "</div>");
+    var lastPostSeparator = $("<div>", {
+        id: lastPostSeparatorId,
+        style: 'margin-bottom: 10px; text-align: center;'
+    }).text(lastPostSeparatorTitle);
+    $("#" + id).before(lastPostSeparator);
     if (reverseSort) {
         window.scrollTo(0, 0);
         var timestamps = [];
@@ -279,7 +283,7 @@ function stopSearching(id, reverseSort) {
         }
     } else {
         var offsetHeight = document.getElementById(blueBarId).offsetHeight;
-        var height = $("#" + lastPostSeparatorId).offset().top;
+        var height = lastPostSeparator[0].offsetTop;
         var y = height - offsetHeight;
         window.scrollTo(0, y > 0 ? y : 0);
     }
