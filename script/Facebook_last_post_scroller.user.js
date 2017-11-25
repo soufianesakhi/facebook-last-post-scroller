@@ -61,6 +61,8 @@ var stopped = false;
 var isMostRecentMode = false;
 var isHome = false;
 var currentURL = null;
+/** @type {JQuery} */
+var loadingToolbar;
 
 $(document).ready(function () {
     initLastPostButtonObserver();
@@ -84,6 +86,23 @@ function initLastPostButtonObserver() {
             }
         });
     });
+}
+
+function initLoadingToolbar() {
+    loadingToolbar = $("<div>", {
+        id: getId("LoadingToolbar"),
+        style: "position: fixed; top: 50px; left: 300px; width: 400px; z-index: 9999; background-color: beige; padding: 10px; border: 1px solid grey; border-radius: 2px;"
+    }).insertAfter(scrollerBtnPredecessorSelector);
+    $("<img>", {
+        src: lastPostIconLink,
+        style: "position: absolute; top: 5px; right: 10px; height: 30px; width: 30px; "
+    }).appendTo(loadingToolbar);
+    var stopLoadingBtn = $("<button>", {
+        id: getId("StopLoading"),
+        type: "submit",
+        style: "cursor: pointer; color: buttontext; background-color: buttonface;"
+    }).text("Stop loading & scrolling").appendTo(loadingToolbar);
+    stopLoadingBtn.click(stopLoading);
 }
 
 function getButton(id, title) {
@@ -117,6 +136,7 @@ function initButtons() {
 function startLoading(eventObject) {
     var reverseSort = eventObject.target.id === reverseSortLoaderId;
     $("#" + menuId).hide();
+    initLoadingToolbar();
     NodeCreationObserver.onCreation(storySelector, function (element) {
         if (stopped) {
             return;
@@ -256,18 +276,23 @@ function getStoryURI(storyElement) {
     return null;
 }
 
-/**
- * @param {string} id 
- * @param {boolean} reverseSort 
- */
-function stopSearching(id, reverseSort) {
-    setLastPost(checkedStories[0]);
+function stopLoading() {
+    loadingToolbar.hide();
     stopped = true;
     NodeCreationObserver.remove(storySelector);
     storyLoadObservers.forEach(function (observer) {
         observer.disconnect();
     });
     storyLoadObservers = [];
+}
+
+/**
+ * @param {string} id 
+ * @param {boolean} reverseSort 
+ */
+function stopSearching(id, reverseSort) {
+    setLastPost(checkedStories[0]);
+    stopLoading();
     var lastPostSeparator = $("<div>", {
         id: lastPostSeparatorId,
         style: 'margin-bottom: 10px; text-align: center;'
