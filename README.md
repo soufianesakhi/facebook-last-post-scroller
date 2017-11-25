@@ -9,6 +9,10 @@ When this script is enabled, the following buttons will appear:
 
 If the last viewed or marked story was removed in the mean time, the script will consider the story that has a timestamp older than the last stored story as the oldest.
 
+A toolbar will be displayed to track the progress and to stop the loading & scrolling if it takes too long:
+![loading-toolbar](https://raw.githubusercontent.com/soufianesakhi/facebook-last-post-scroller/master/img/loading-toolbar.png)
+
+
 The script only works when the homepage is set to view most recent stories instead of top stories.
 
 By default, the last viewed story will be saved for the next session only after finding the current last story. 
