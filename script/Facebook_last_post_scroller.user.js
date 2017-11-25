@@ -63,6 +63,10 @@ var isHome = false;
 var currentURL = null;
 /** @type {JQuery} */
 var loadingToolbar;
+/** @type {JQuery} */
+var loadingProgress;
+/** @type {Number} */
+var timeSinceLastpost;
 
 $(document).ready(function () {
     initLastPostButtonObserver();
@@ -89,6 +93,8 @@ function initLastPostButtonObserver() {
 }
 
 function initLoadingToolbar() {
+    timeSinceLastpost = Math.floor(Date.now() / 1000) - lastPostTimestamp;
+    console.log('timeSinceLastpost: ' + timeSinceLastpost);
     loadingToolbar = $("<div>", {
         id: getId("LoadingToolbar"),
         style: "position: fixed; top: 50px; left: 300px; width: 400px; z-index: 9999; background-color: beige; padding: 10px; border: 1px solid grey; border-radius: 2px;"
@@ -102,7 +108,17 @@ function initLoadingToolbar() {
         type: "submit",
         style: "cursor: pointer; color: buttontext; background-color: buttonface;"
     }).text("Stop loading & scrolling").appendTo(loadingToolbar);
+    loadingProgress = $("<progress>", {
+        value: 0,
+        max: 100,
+        style: "margin-left: 40px;"
+    }).appendTo(loadingToolbar);
     stopLoadingBtn.click(stopLoading);
+}
+
+function updateProgress(currentTimestamp) {
+    var progress = 100 - 100 * (currentTimestamp - lastPostTimestamp) / timeSinceLastpost;
+    loadingProgress.attr("value", progress);
 }
 
 function getButton(id, title) {
@@ -244,6 +260,7 @@ function searchForStory(reverseSort) {
             if (uri != null) {
                 checkedStories.push(element);
                 var ts = getStoryTimestamp(element);
+                updateProgress(ts);
                 if (uri === lastPostURI) {
                     stopSearching(element.id, reverseSort);
                 } else if (ts < lastPostTimestamp && notSuggestedStory(element)) {
