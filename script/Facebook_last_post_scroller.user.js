@@ -2,8 +2,9 @@
 // @name        Facebook last post scroller
 // @namespace   https://github.com/soufianesakhi/facebook-last-post-scroller
 // @description Automatically scroll to the last viewed or marked Facebook story
-// @author      soufianesakhi
-// @license     MIT licensed, Copyright (c) 2016-2017 Soufiane Sakhi (https://opensource.org/licenses/MIT)
+// @author      https://github.com/soufianesakhi
+// @copyright   2016-2017, Soufiane Sakhi
+// @license     MIT; https://opensource.org/licenses/MIT
 // @homepage    https://github.com/soufianesakhi/facebook-last-post-scroller
 // @supportURL  https://github.com/soufianesakhi/facebook-last-post-scroller/issues
 // @updateURL   https://github.com/soufianesakhi/facebook-last-post-scroller/raw/master/script/Facebook_last_post_scroller.user.js
@@ -13,7 +14,7 @@
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
 // @include     https://web.facebook.com/*
-// @version     1.2.4
+// @version     1.3.0
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
