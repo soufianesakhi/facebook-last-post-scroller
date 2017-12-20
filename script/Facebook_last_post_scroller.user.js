@@ -14,7 +14,7 @@
 // @require     https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @include     https://www.facebook.com/*
 // @include     https://web.facebook.com/*
-// @version     1.3.0
+// @version     1.3.1
 // @grant       GM_setValue
 // @grant       GM_getValue
 // ==/UserScript==
@@ -262,12 +262,13 @@ function searchForStory(reverseSort) {
                 checkedStories.push(element);
                 var ts = getStoryTimestamp(element);
                 updateProgress(ts);
+                var notSuggested = notSuggestedStory(element);
                 if (uri === lastPostURI) {
                     stopSearching(element.id, reverseSort);
-                } else if (ts < lastPostTimestamp && notSuggestedStory(element)) {
+                } else if (ts < lastPostTimestamp && notSuggested) {
                     stopSearching(element.id, reverseSort);
-                    console.log("The last post was not found: " + lastPostURI);
-                    console.log("Stopped at the timestamp: " + ts);
+                    console.log("The last post was not found: " + lastPostURI + " (" + lastPostTimestamp + ")");
+                    console.log("Stopped at the story: " + uri + " (" + ts + ")" + (notSuggested ? "" : " (suggested story)"));
                 }
             }
         }
@@ -279,7 +280,11 @@ function notSuggestedStory(storyElement) {
         return false;
     }
     var div = $(storyElement).find("._5g-l");
-    return div.length == 0 || div.find(".profileLink").length > 0;
+    var notSuggested = div.length == 0 || div.find(".profileLink").length > 0;
+    if (notSuggested) {
+        notSuggested = $(storyElement).find("span:not([class]) > span[class]:not(:has(*))").length == 0;
+    }
+    return notSuggested;
 }
 
 function getStoryTimestamp(storyElement) {
